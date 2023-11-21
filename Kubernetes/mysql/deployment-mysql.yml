@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: tokenization
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_DATABASE
+              value: tokenizationDB
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: credentials
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-vol2
+              mountPath: /var/lib/mysql
+            - name: mysql-vol3
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-vol2
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
+        - name: mysql-vol3
+          configMap:
+            name: db-script-mysql

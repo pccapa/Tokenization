@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-script-mysql
+  namespace: tokenization
+data:
+  mysql_whattowatch.sql: |-
+    create database tokenizationDB;
+    use tokenizationDB;
+    create table credit_card(
+    id_credit_card varchar(100) not null  primary key ,
+    card_number varchar(17) not null ,
+    cvv_number int not null,
+    expiration_month varchar(2) not null,
+    expiration_year varchar(4) not null,
+    email varchar(100) not null
+    );
+
+    create table merchant(
+    id_merchant varchar(100) primary key not null,
+    name_merchant varchar(200) not null,
+    pk_merchant varchar(24) unique not null 
+    );
+
+    insert into merchant ( id_merchant,name_merchant,pk_merchant ) values ( uuid(),'Cliente 1','pk_test_lsRbkEjzCoeEw0sw' );
+    insert into credit_card (id_credit_card,card_number,cvv_number,expiration_month,expiration_year,email) 
+    values ( uuid(), "4111111111111111",256,'12','2027','pedro.dev@yahoo.es' );
+
+     DELIMITER //
+     create procedure `findCreditCard`( in p_card_number varchar(16) ,in p_cvv_number int ,in  p_expiration_month varchar(2), 
+      in p_expiration_year varchar(4),in p_email varchar(100) )
+     select card_number,expiration_month,expiration_year,email from credit_card card  where card.card_number = p_card_number and card.cvv_number=p_cvv_number and
+     card.expiration_month =p_expiration_month and card.expiration_year =p_expiration_year and card.email =p_email ;
+      //
+    DELIMITER ;
+
+
+     DELIMITER //
+     create procedure `checkMerchant` ( in p_pk_merchant varchar(24)  )
+     begin
+     DECLARE countRecords int ;
+     select  count(*) into countRecords from merchant mer where mer.pk_merchant = p_pk_merchant;
+     if countRecords > 0 then
+     set countRecords = 1;
+     else
+     set countRecords = 0;
+     end if;
+     select countRecords;
+     end
+     //
+    DELIMITER ;
+
+
